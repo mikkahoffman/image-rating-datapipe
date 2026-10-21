@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>animal typicality experiment</title>
+  <script src="https://unpkg.com/jspsych@8.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-image-slider-response@2.0.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-preload@2.0.0"></script>
+  <!-- NEW: the DataPipe extension, which saves our data -->
+  <script src="https://unpkg.com/@jspsych/extension-pipe@0.2.0"></script>
+  <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body></body>
+<script>
+
+  // initialize jsPsych
+  var jsPsych = initJsPsych({
+    on_finish: function () {
+      jsPsych.data.displayData();
+    },
+    // NEW: send the data to DataPipe. Paste your experiment ID between the quotes.
+    extensions: [
+      {
+        type: jsPsychExtensionPipe,
+        params: {
+          experiment_id: "PASTE_YOUR_ID_HERE",
+          filename: function () {
+            return subject_id + ".csv";
+          }
+        }
+      }
+    ]
+  });
+
+  // NEW: give each participant a random ID. Their data file is named after it.
+  var subject_id = jsPsych.randomization.randomID(10);
+
+  // create timeline
+  var timeline = [];
+
+  // preload images
+  var preload = {
+    type: jsPsychPreload,
+    images: [
+      'stimuli/dog.jpg', 'stimuli/horse.jpg', 'stimuli/bear.jpg',
+      'stimuli/rabbit.jpg', 'stimuli/giraffe.jpg', 'stimuli/penguin.jpg',
+      'stimuli/dolphin.jpg', 'stimuli/snake.jpg', 'stimuli/flamingo.jpg',
+      'stimuli/octopus.jpg', 'stimuli/butterfly.jpg', 'stimuli/jellyfish.jpg'
+    ]
+  };
+  timeline.push(preload);
+
+  // define welcome message trial
+  var welcome = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: "Welcome to the experiment. Press any key to begin."
+  };
+  timeline.push(welcome);
+
+  // define the instructions trial
+  var instructions = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+      <p>In this experiment, you will see pictures of animals.</p>
+      <p>Use the slider to say how <strong>typical</strong> each animal is.</p>
+      <p>Press any key to begin.</p>
+    `
+  };
+  timeline.push(instructions);
+
+  // create the test stimuli we will use to set the timeline variable
+  var test_stimuli = [
+    { stimulus: 'stimuli/dog.jpg', animal: 'dog' },
+    { stimulus: 'stimuli/horse.jpg', animal: 'horse' },
+    { stimulus: 'stimuli/bear.jpg', animal: 'bear' },
+    { stimulus: 'stimuli/rabbit.jpg', animal: 'rabbit' },
+    { stimulus: 'stimuli/giraffe.jpg', animal: 'giraffe' },
+    { stimulus: 'stimuli/penguin.jpg', animal: 'penguin' },
+    { stimulus: 'stimuli/dolphin.jpg', animal: 'dolphin' },
+    { stimulus: 'stimuli/snake.jpg', animal: 'snake' },
+    { stimulus: 'stimuli/flamingo.jpg', animal: 'flamingo' },
+    { stimulus: 'stimuli/octopus.jpg', animal: 'octopus' },
+    { stimulus: 'stimuli/butterfly.jpg', animal: 'butterfly' },
+    { stimulus: 'stimuli/jellyfish.jpg', animal: 'jellyfish' }
+  ];
+
+  // create the rating trial, with a stimulus timeline variable
+  // the slider goes from 0 to 100; the rating is saved in the "response" column
+  var rating = {
+    type: jsPsychImageSliderResponse,
+    stimulus: jsPsych.timelineVariable('stimulus'),
+    stimulus_height: 300,
+    prompt: "<p>How typical is this animal?</p>",
+    labels: ['Not at all typical', 'Very typical'],
+    require_movement: true,
+    data: {
+      task: "rating",
+      animal: jsPsych.timelineVariable('animal')
+    }
+  };
+
+  // create a test procedure that shows every animal once, in a random order
+  var test_procedure = {
+    timeline: [rating],
+    timeline_variables: test_stimuli,
+    randomize_order: true
+  };
+  timeline.push(test_procedure);
+
+  // start the experiment
+  jsPsych.run(timeline);
+
+</script>
+
+</html>

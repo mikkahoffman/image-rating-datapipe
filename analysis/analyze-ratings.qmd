@@ -1,0 +1,65 @@
+---
+title: "Animal typicality ratings"
+author: "Your name here"
+date: today
+format: html
+---
+
+DataPipe saves **one CSV file per participant**. This document reads all of
+them and finds the average typicality rating for each animal.
+
+## Load packages
+
+```{r}
+#| message: false
+library(tidyverse)
+library(here)
+```
+
+## Read in all the data files
+
+The files in `data/example/` are practice runs with random slider positions.
+For your real data, download the files from your Google Drive into
+`data/raw/` and change `"example"` to `"raw"` below.
+
+```{r}
+files <- list.files(here("data", "example"), full.names = TRUE)
+files
+```
+
+`read_csv()` can read a whole list of files and stack them into one table.
+
+```{r}
+all_data <- read_csv(files, show_col_types = FALSE)
+```
+
+## Keep only the rating trials
+
+The `response` column also holds the keys people pressed on the welcome
+screens (like `"a"`), so R reads it as text. Once we keep only the rating
+trials, we turn it back into numbers with `as.numeric()`.
+
+```{r}
+ratings <- all_data |>
+  filter(task == "rating") |>
+  mutate(response = as.numeric(response)) |>
+  select(animal, response)
+
+ratings
+```
+
+## Average rating for each animal
+
+```{r}
+animal_means <- ratings |>
+  group_by(animal) |>
+  summarise(mean_rating = mean(response))
+
+animal_means
+```
+
+```{r}
+ggplot(animal_means, aes(x = mean_rating, y = animal)) +
+  geom_col() +
+  labs(x = "Mean typicality rating (0-100)", y = "Animal")
+```
